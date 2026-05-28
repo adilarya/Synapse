@@ -1,22 +1,41 @@
-// TODO(doniv): Build the split-screen UI here.
-//   Top: title "Synapse" + subtitle
-//   Middle: <ChatPanel agent="openai" /> | <ChatPanel agent="claude" />
-//   Bottom: <MemoryPanel />
-//   After each send, refresh MemoryPanel by re-fetching GET /api/memories.
+"use client";
+
+import { useState } from "react";
+import ChatPanel from "@/components/ChatPanel";
+import MemoryPanel from "@/components/MemoryPanel";
 
 export default function Page() {
+  const [memoryRefreshKey, setMemoryRefreshKey] = useState(0);
+
+  const handleMessageSent = () => {
+    setMemoryRefreshKey((prev) => prev + 1);
+  };
+
   return (
-    <main className="mx-auto max-w-6xl px-6 py-12">
+    <main className="mx-auto max-w-7xl px-6 py-12">
       <header>
         <h1 className="text-3xl font-semibold tracking-tight">Synapse</h1>
         <p className="mt-2 text-neutral-400">Shared memory for agents across models</p>
       </header>
 
-      <section className="mt-12 rounded-xl border border-neutral-800 bg-neutral-900/50 p-6">
-        <p className="text-sm text-neutral-400">
-          Scaffold ready. Doniv: replace this with the split-screen chat + memory dashboard.
-        </p>
-      </section>
+      <div className="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-2 lg:h-[500px]">
+        <ChatPanel
+          agent="openai"
+          title="Adil's ChatGPT Agent"
+          placeholder="We are building Synapse. I am Adil and I will handle the OpenAI agent and pitch..."
+          onMessageSent={handleMessageSent}
+        />
+        <ChatPanel
+          agent="claude"
+          title="Eshwar's Claude Agent"
+          placeholder="What has Adil already decided for the project?"
+          onMessageSent={handleMessageSent}
+        />
+      </div>
+
+      <div className="mt-6">
+        <MemoryPanel refreshKey={memoryRefreshKey} />
+      </div>
     </main>
   );
 }
