@@ -1,9 +1,13 @@
 import type { IngestConversationArgs, MemoryItem } from "@/lib/types";
 
-// In-memory shared store. Process-local — fine for a single-server demo, not for prod.
-// Survives across requests within one `next dev` / `next start` process.
-
-const store: MemoryItem[] = [];
+// Use a global so all route handlers in the same Next.js process share one store,
+// even if this module is evaluated multiple times in different module contexts.
+declare global {
+  // eslint-disable-next-line no-var
+  var __synapseMemoryStore: MemoryItem[] | undefined;
+}
+if (!global.__synapseMemoryStore) global.__synapseMemoryStore = [];
+const store = global.__synapseMemoryStore;
 
 function makeId(): string {
   return `mem_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;

@@ -17,74 +17,52 @@ export default function MemoryPanel({ refreshKey }: MemoryPanelProps) {
       try {
         const response = await fetch("/api/memories");
         const data = await response.json();
-        setMemories(data.memories || []);
-      } catch (error) {
-        console.error("Error fetching memories:", error);
+        setMemories(data.memories ?? []);
+      } catch {
         setMemories([]);
       } finally {
         setLoading(false);
       }
     };
-
     fetchMemories();
   }, [refreshKey]);
 
-  const getBadgeColor = (sourceAgent: string) => {
-    switch (sourceAgent) {
-      case "openai":
-        return "bg-green-900/30 text-green-400 border-green-800";
-      case "claude":
-        return "bg-violet-900/30 text-violet-400 border-violet-800";
-      default:
-        return "bg-neutral-800 text-neutral-400 border-neutral-700";
-    }
+  const badgeStyle = (source: string) => {
+    if (source === "openai") return "bg-green-900/40 text-green-400 border-green-800";
+    if (source === "claude") return "bg-violet-900/40 text-violet-400 border-violet-800";
+    return "bg-neutral-800 text-neutral-400 border-neutral-700";
   };
 
-  const formatTimestamp = (timestamp: string) => {
-    if (!timestamp) return "";
-    try {
-      const date = new Date(timestamp);
-      return date.toLocaleTimeString();
-    } catch {
-      return timestamp;
-    }
+  const badgeLabel = (source: string) => {
+    if (source === "claude") return "gemini";
+    return source;
+  };
+
+  const formatTime = (ts: string) => {
+    try { return new Date(ts).toLocaleTimeString(); } catch { return ""; }
   };
 
   return (
-    <div className="rounded-xl border border-neutral-800 bg-neutral-900/50 p-4">
-      <h2 className="text-sm font-medium text-neutral-300">Shared XTrace Memory</h2>
-      
-      <div className="mt-4 space-y-3">
-        {loading ? (
-          <p className="text-sm text-neutral-500">Loading memories...</p>
-        ) : memories.length === 0 ? (
-          <p className="text-sm text-neutral-500">No memories yet. Start chatting to build shared context.</p>
-        ) : (
-          memories.map((memory) => (
-            <div
-              key={memory.id}
-              className="rounded-lg border border-neutral-800 bg-neutral-800/50 p-3"
-            >
-              <div className="flex items-center gap-2">
-                <span
-                  className={`rounded border px-2 py-0.5 text-xs font-medium uppercase ${getBadgeColor(memory.sourceAgent)}`}
-                >
-                  {memory.sourceAgent}
-                </span>
-                {memory.createdAt && (
-                  <span className="text-xs text-neutral-500">{formatTimestamp(memory.createdAt)}</span>
-                )}
+    <div className="px-4 py-3 font-mono text-xs">
+      {loading ? (
+        <span className="text-neutral-600">loading memories...</span>
+      ) : memories.length === 0 ? (
+        <span className="text-neutral-600">no memories yet — start chatting to build shared context.</span>
+      ) : (
+        <div className="flex flex-wrap gap-3">
+          {memories.map((m) => (
+            <div key={m.id} className="flex items-start gap-2 rounded border border-neutral-800 bg-neutral-800/40 px-3 py-2 max-w-sm">
+              <span className={`shrink-0 rounded border px-1.5 py-0.5 text-xs font-semibold uppercase ${badgeStyle(m.sourceAgent)}`}>
+                {badgeLabel(m.sourceAgent)}
+              </span>
+              <div>
+                <p className="text-neutral-300 leading-relaxed">{m.content}</p>
+                {m.createdAt && <p className="mt-0.5 text-neutral-600">{formatTime(m.createdAt)}</p>}
               </div>
-              <p className="mt-2 text-sm text-neutral-200">{memory.content}</p>
-              {memory.metadata && Object.keys(memory.metadata).length > 0 && (
-                <div className="mt-2 text-xs text-neutral-500">
-                  <pre className="overflow-x-auto">{JSON.stringify(memory.metadata, null, 2)}</pre>
-                </div>
-              )}
             </div>
-          ))
-        )}
-      </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import type { ChatMessage } from "@/lib/types";
 
 export type ChatPanelProps = {
@@ -10,10 +10,15 @@ export type ChatPanelProps = {
   onMessageSent?: () => void;
 };
 
-export default function ChatPanel({ agent, title, placeholder, onMessageSent }: ChatPanelProps) {
+export default function ChatPanel({ agent, placeholder, onMessageSent }: ChatPanelProps) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
+  const bottomRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages, loading]);
 
   const handleSend = async () => {
     if (!input.trim() || loading) return;
@@ -30,21 +35,24 @@ export default function ChatPanel({ agent, title, placeholder, onMessageSent }: 
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ message: messageToSend }),
       });
-
       const data = await response.json();
-      const assistantMessage: ChatMessage = { role: "assistant", content: data.assistantMessage };
+      const assistantMessage: ChatMessage = {
+        role: "assistant",
+        content: data.assistantMessage ?? data.error ?? "No response.",
+      };
       setMessages((prev) => [...prev, assistantMessage]);
       onMessageSent?.();
-    } catch (error) {
-      console.error("Error sending message:", error);
-      const errorMessage: ChatMessage = { role: "assistant", content: "Error: Failed to get response." };
-      setMessages((prev) => [...prev, errorMessage]);
+    } catch {
+      setMessages((prev) => [
+        ...prev,
+        { role: "assistant", content: "Error: failed to reach agent." },
+      ]);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleKeyPress = (e: React.KeyboardEvent) => {
+  const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       handleSend();
@@ -52,51 +60,46 @@ export default function ChatPanel({ agent, title, placeholder, onMessageSent }: 
   };
 
   return (
-    <div className="flex h-full flex-col rounded-xl border border-neutral-800 bg-neutral-900/50 p-4">
-      <h2 className="text-lg font-semibold text-neutral-100">{title}</h2>
-      
-      <div className="mt-4 flex-1 overflow-y-auto space-y-3">
-        {messages.length === 0 ? (
-          <p className="text-sm text-neutral-500">{placeholder || "Start a conversation..."}</p>
-        ) : (
-          messages.map((msg, idx) => (
-            <div
-              key={idx}
-              className={`rounded-lg p-3 ${
-                msg.role === "user"
-                  ? "bg-neutral-800 text-neutral-100"
-                  : "bg-neutral-800/50 text-neutral-200"
-              }`}
-            >
-              <span className="text-xs font-medium text-neutral-400 uppercase">
-                {msg.role}
-              </span>
-              <p className="mt-1 text-sm whitespace-pre-wrap">{msg.content}</p>
-            </div>
-          ))
+    <div className="flex h-full flex-col bg-neutral-950 font-mono text-sm">
+      {/* Message list */}
+      <div className="flex-1 overflow-y-auto px-4 py-3 space-y-4">
+        {messages.length === 0 && (
+          <p className="text-neutral-600 text-xs mt-2">{placeholder ?? "Send a message to start."}</p>
         )}
+        {messages.map((msg, idx) => (
+          <div key={idx} className="space-y-0.5">
+            <div className={`text-xs font-semibold ${msg.role === "user" ? "text-neutral-500" : agent === "openai" ? "text-green-400" : "text-violet-400"}`}>
+              {msg.role === "user" ? "you" : agent === "openai" ? "gpt-4o-mini" : "gemini-2.5-flash"}
+            </div>
+            <p className="text-neutral-200 whitespace-pre-wrap leading-relaxed">{msg.content}</p>
+          </div>
+        ))}
         {loading && (
-          <div className="rounded-lg bg-neutral-800/50 p-3">
-            <span className="text-xs font-medium text-neutral-400 uppercase">assistant</span>
-            <p className="mt-1 text-sm text-neutral-500">Thinking...</p>
+          <div className="space-y-0.5">
+            <div className={`text-xs font-semibold ${agent === "openai" ? "text-green-400" : "text-violet-400"}`}>
+              {agent === "openai" ? "gpt-4o-mini" : "gemini-2.5-flash"}
+            </div>
+            <p className="text-neutral-500 animate-pulse">thinking...</p>
           </div>
         )}
+        <div ref={bottomRef} />
       </div>
 
-      <div className="mt-4 flex gap-2">
+      {/* Input */}
+      <div className="border-t border-neutral-800 px-4 py-3 flex gap-2 shrink-0">
         <input
           type="text"
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          onKeyPress={handleKeyPress}
+          onKeyDown={handleKeyDown}
           placeholder="Type a message..."
           disabled={loading}
-          className="flex-1 rounded-lg border border-neutral-700 bg-neutral-800 px-3 py-2 text-sm text-neutral-100 placeholder-neutral-500 focus:border-neutral-600 focus:outline-none disabled:opacity-50"
+          className="flex-1 bg-neutral-900 border border-neutral-700 rounded px-3 py-2 text-sm text-neutral-100 placeholder-neutral-600 focus:border-neutral-500 focus:outline-none disabled:opacity-40"
         />
         <button
           onClick={handleSend}
           disabled={loading || !input.trim()}
-          className="rounded-lg bg-neutral-700 px-4 py-2 text-sm font-medium text-neutral-100 hover:bg-neutral-600 disabled:opacity-50 disabled:hover:bg-neutral-700"
+          className={`rounded px-4 py-2 text-xs font-semibold disabled:opacity-30 ${agent === "openai" ? "bg-green-900/50 text-green-300 hover:bg-green-900" : "bg-violet-900/50 text-violet-300 hover:bg-violet-900"}`}
         >
           Send
         </button>

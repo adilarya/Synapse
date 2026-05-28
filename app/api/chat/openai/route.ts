@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import * as openaiAgent from "@/lib/openaiAgent";
-import { ingestConversation, searchMemories } from "@/lib/xtrace";
+import { ingestConversation, searchMemories, getRecentMemories } from "@/lib/xtrace";
+import { detectConflict } from "@/lib/conflictDetector";
 import type { ChatMessage, MemoryItem } from "@/lib/types";
 
 export const runtime = "nodejs";
@@ -26,9 +27,31 @@ export async function POST(req: Request) {
 
   let retrievedMemories: MemoryItem[] = [];
   try {
-    retrievedMemories = await searchMemories(message);
+    const [searched, recent] = await Promise.all([
+      searchMemories(message),
+      getRecentMemories(),
+    ]);
+    const seen = new Set<string>();
+    retrievedMemories = [...recent, ...searched].filter((m) => {
+      if (seen.has(m.id)) return false;
+      seen.add(m.id);
+      return true;
+    });
   } catch {
     retrievedMemories = [];
+  }
+
+  // Run conflict detection before calling the agent
+  const conflict = await detectConflict(message, retrievedMemories);
+  if (conflict.hasConflict) {
+    const assistantMessage = `⚠️ Conflict detected with existing team work.\n\n${conflict.reason}\n\nExisting work: "${conflict.existingWork}"\n\nPlease align with what's already been decided before proceeding.`;
+    await ingestConversation({
+      userMessage: message,
+      assistantMessage,
+      sourceAgent: "openai",
+      metadata: { project: "synapse", conflict: true },
+    });
+    return NextResponse.json({ assistantMessage, retrievedMemories, sourceAgent: "openai" as const });
   }
 
   let assistantMessage: string;
