@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
-import type { MemoryItem } from "@/lib/types";
+import { getRecentMemories } from "@/lib/xtrace";
 
-// TODO(eshwar): wire to xtrace.getRecentMemories() (falls back to memoryFallback).
+export const runtime = "nodejs";
 
 export async function GET() {
-  const memories: MemoryItem[] = [];
+  const memories = await getRecentMemories();
   return NextResponse.json({ memories });
 }
