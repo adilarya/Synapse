@@ -1,14 +1,14 @@
-import Anthropic from "@anthropic-ai/sdk";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 import type { ChatMessage, MemoryItem } from "@/lib/types";
 
-const MODEL = "claude-sonnet-4-6";
+const MODEL = "gemini-2.5-flash";
 
-let _client: Anthropic | null = null;
-function client(): Anthropic {
+let _client: GoogleGenerativeAI | null = null;
+function client(): GoogleGenerativeAI {
   if (_client) return _client;
-  const apiKey = process.env.ANTHROPIC_API_KEY;
-  if (!apiKey) throw new Error("ANTHROPIC_API_KEY is not set");
-  _client = new Anthropic({ apiKey });
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey) throw new Error("GEMINI_API_KEY is not set");
+  _client = new GoogleGenerativeAI(apiKey);
   return _client;
 }
 
@@ -37,17 +37,20 @@ export type ClaudeRunArgs = {
 };
 
 export async function run({ message, history = [], memories }: ClaudeRunArgs): Promise<string> {
-  const response = await client().messages.create({
+  const model = client().getGenerativeModel({
     model: MODEL,
-    max_tokens: 1024,
-    system: buildSystemPrompt(memories),
-    messages: [
-      ...history
-        .filter((m) => m.role !== "system")
-        .map((m) => ({ role: m.role as "user" | "assistant", content: m.content })),
-      { role: "user", content: message },
-    ],
+    systemInstruction: buildSystemPrompt(memories),
   });
-  const block = response.content[0];
-  return block.type === "text" ? block.text.trim() : "";
+
+  const chat = model.startChat({
+    history: history
+      .filter((m) => m.role !== "system")
+      .map((m) => ({
+        role: m.role === "assistant" ? "model" : "user",
+        parts: [{ text: m.content }],
+      })),
+  });
+
+  const result = await chat.sendMessage(message);
+  return result.response.text().trim();
 }
