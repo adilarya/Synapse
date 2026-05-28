@@ -1,1 +1,92 @@
 @import "tailwindcss";
+
+/* ── Retro Apple Aqua era globals ── */
+
+body {
+  background: #1a1828;
+  font-family: system-ui, -apple-system, "Helvetica Neue", sans-serif;
+}
+
+/* Brushed-metal header bar */
+.metal-bar {
+  background: linear-gradient(
+    180deg,
+    #4a4560 0%,
+    #2e2a45 30%,
+    #1c1b2e 60%,
+    #131222 100%
+  );
+  border-bottom: 1px solid #6c63ff44;
+  box-shadow: 0 2px 12px #00000088, inset 0 1px 0 #ffffff18;
+}
+
+/* Aqua-style glossy button */
+.aqua-btn {
+  background: linear-gradient(
+    180deg,
+    #8a7fff 0%,
+    #6c63ff 45%,
+    #4a40e0 55%,
+    #5a52f0 100%
+  );
+  box-shadow: 0 1px 4px #00000066, inset 0 1px 0 #ffffff44, 0 0 0 1px #3a32cc;
+  text-shadow: 0 -1px 0 #00000055;
+}
+.aqua-btn:hover {
+  background: linear-gradient(
+    180deg,
+    #9e94ff 0%,
+    #7b72ff 45%,
+    #5a52f0 55%,
+    #6a62ff 100%
+  );
+}
+.aqua-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* Mac OS X window chrome title bar */
+.window-titlebar {
+  background: linear-gradient(
+    180deg,
+    #3b3655 0%,
+    #2a2642 50%,
+    #221f38 100%
+  );
+  border-bottom: 1px solid #ffffff15;
+  box-shadow: inset 0 1px 0 #ffffff20;
+}
+
+/* Inset panel body */
+.window-body {
+  background: #13121f;
+  box-shadow: inset 0 2px 8px #00000055;
+}
+
+/* Pinstripe divider */
+.pinstripe {
+  background: repeating-linear-gradient(
+    180deg,
+    transparent,
+    transparent 1px,
+    #ffffff04 1px,
+    #ffffff04 2px
+  );
+}
+
+/* Aqua traffic light dots */
+.dot-red    { background: radial-gradient(circle at 35% 35%, #ff8080, #ff3b30); box-shadow: 0 0 0 0.5px #cc2018; }
+.dot-yellow { background: radial-gradient(circle at 35% 35%, #ffe580, #ffcc00); box-shadow: 0 0 0 0.5px #cc9900; }
+.dot-green  { background: radial-gradient(circle at 35% 35%, #80ff9f, #34c759); box-shadow: 0 0 0 0.5px #1f8a35; }
+
+/* Aqua scroll */
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: #1a1828; }
+::-webkit-scrollbar-thumb { background: #4a4070; border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: #6c63ff; }
+
+/* Memory badge glow */
+.badge-openai  { background: #0a2e1a; color: #34c759; border: 1px solid #1a5c30; }
+.badge-gemini  { background: #1e1040; color: #a78bfa; border: 1px solid #4c3899; }
+.badge-shared  { background: #1a1a2e; color: #888; border: 1px solid #333; }

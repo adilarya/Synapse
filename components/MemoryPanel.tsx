@@ -3,8 +3,17 @@
 import { useEffect, useState } from "react";
 import type { MemoryItem } from "@/lib/types";
 
-export type MemoryPanelProps = {
-  refreshKey?: number;
+export type MemoryPanelProps = { refreshKey?: number };
+
+const BADGE: Record<string, string> = {
+  openai: "badge-openai",
+  claude: "badge-gemini",
+  shared: "badge-shared",
+};
+const LABEL: Record<string, string> = {
+  openai: "openai",
+  claude: "gemini",
+  shared: "shared",
 };
 
 export default function MemoryPanel({ refreshKey }: MemoryPanelProps) {
@@ -12,52 +21,47 @@ export default function MemoryPanel({ refreshKey }: MemoryPanelProps) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchMemories = async () => {
-      setLoading(true);
-      try {
-        const response = await fetch("/api/memories");
-        const data = await response.json();
-        setMemories(data.memories ?? []);
-      } catch {
-        setMemories([]);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchMemories();
+    setLoading(true);
+    fetch("/api/memories")
+      .then((r) => r.json())
+      .then((d) => setMemories(d.memories ?? []))
+      .catch(() => setMemories([]))
+      .finally(() => setLoading(false));
   }, [refreshKey]);
 
-  const badgeStyle = (source: string) => {
-    if (source === "openai") return "bg-green-900/40 text-green-400 border-green-800";
-    if (source === "claude") return "bg-violet-900/40 text-violet-400 border-violet-800";
-    return "bg-neutral-800 text-neutral-400 border-neutral-700";
-  };
-
-  const badgeLabel = (source: string) => {
-    if (source === "claude") return "gemini";
-    return source;
-  };
-
-  const formatTime = (ts: string) => {
+  const fmt = (ts: string) => {
     try { return new Date(ts).toLocaleTimeString(); } catch { return ""; }
   };
 
   return (
-    <div className="px-4 py-3 font-mono text-xs">
+    <div className="px-4 py-3" style={{ fontFamily: "ui-monospace, 'SF Mono', Menlo, monospace" }}>
       {loading ? (
-        <span className="text-neutral-600">loading memories...</span>
+        <span className="text-xs" style={{ color: "#444" }}>loading memories...</span>
       ) : memories.length === 0 ? (
-        <span className="text-neutral-600">no memories yet — start chatting to build shared context.</span>
+        <span className="text-xs" style={{ color: "#444" }}>
+          no memories yet — start chatting to build shared context.
+        </span>
       ) : (
-        <div className="flex flex-wrap gap-3">
+        <div className="flex flex-wrap gap-2">
           {memories.map((m) => (
-            <div key={m.id} className="flex items-start gap-2 rounded border border-neutral-800 bg-neutral-800/40 px-3 py-2 max-w-sm">
-              <span className={`shrink-0 rounded border px-1.5 py-0.5 text-xs font-semibold uppercase ${badgeStyle(m.sourceAgent)}`}>
-                {badgeLabel(m.sourceAgent)}
+            <div
+              key={m.id}
+              className="flex items-start gap-2 rounded-lg px-3 py-2"
+              style={{
+                background: "#0d0c1a",
+                border: "1px solid #2a2545",
+                maxWidth: "380px",
+                boxShadow: "0 2px 8px #00000044",
+              }}
+            >
+              <span className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-bold uppercase ${BADGE[m.sourceAgent] ?? BADGE.shared}`}>
+                {LABEL[m.sourceAgent] ?? m.sourceAgent}
               </span>
-              <div>
-                <p className="text-neutral-300 leading-relaxed">{m.content}</p>
-                {m.createdAt && <p className="mt-0.5 text-neutral-600">{formatTime(m.createdAt)}</p>}
+              <div className="min-w-0">
+                <p className="text-xs leading-relaxed break-words" style={{ color: "#bbb" }}>{m.content}</p>
+                {m.createdAt && (
+                  <p className="mt-1 text-xs" style={{ color: "#444" }}>{fmt(m.createdAt)}</p>
+                )}
               </div>
             </div>
           ))}
