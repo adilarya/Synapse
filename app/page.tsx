@@ -72,6 +72,8 @@ export default function Page() {
           <div className="flex-1 overflow-hidden window-body pinstripe">
             <ChatPanel
               agent="openai"
+              user="adil"
+              filename="openai-agent.ts"
               placeholder="We are building Synapse. I am Adil and I will handle the OpenAI agent and pitch..."
               onMessageSent={handleMessageSent}
             />
@@ -98,6 +100,8 @@ export default function Page() {
           <div className="flex-1 overflow-hidden window-body pinstripe">
             <ChatPanel
               agent="claude"
+              user="eshwar"
+              filename="gemini-agent.ts"
               placeholder="What has Adil already decided for the project?"
               onMessageSent={handleMessageSent}
             />
