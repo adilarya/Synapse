@@ -79,7 +79,76 @@ function PageInner() {
   const [memoryRefreshKey, setMemoryRefreshKey] = useState(0);
   const handleMessageSent = () => setMemoryRefreshKey((k) => k + 1);
   const params = useSearchParams();
-  const agentParam = params.get("agent"); // "openai" | "gemini" | null
+  const agentParam = params.get("agent"); // "openai" | "gemini" | "both" | null
+
+  // ── Landing: pick your agent ──
+  if (!agentParam) {
+    return (
+      <div className="flex h-screen flex-col items-center justify-center overflow-hidden"
+        style={{ background: "#0e0d1a" }}>
+        <div className="mb-10 text-center">
+          <Image src="/synapse_logo.svg" alt="Synapse" width={280} height={130} priority
+            style={{ filter: "drop-shadow(0 0 20px #6c63ff88)", margin: "0 auto" }} />
+          <p className="mt-4 text-xs tracking-widest uppercase" style={{ color: "#45475a" }}>
+            Choose your workspace
+          </p>
+        </div>
+
+        <div className="flex gap-5">
+          {/* Adil card */}
+          <a href="?agent=openai"
+            className="group flex flex-col items-center gap-3 rounded-xl px-10 py-8 transition-all duration-200"
+            style={{
+              background: "#12111e",
+              border: "1px solid #1a5c30",
+              boxShadow: "0 0 0 0 #34c75900",
+            }}
+            onMouseEnter={e => (e.currentTarget.style.boxShadow = "0 0 24px #34c75944")}
+            onMouseLeave={e => (e.currentTarget.style.boxShadow = "0 0 0 0 #34c75900")}
+          >
+            <span className="h-3 w-3 rounded-full"
+              style={{ background: "radial-gradient(circle at 35% 35%, #80ffb0, #34c759)", boxShadow: "0 0 10px #34c75988" }} />
+            <span className="text-lg font-semibold" style={{ color: "#34c759" }}>adil</span>
+            <span className="text-xs" style={{ color: "#45475a" }}>GPT-4o mini</span>
+          </a>
+
+          {/* Eshwar card */}
+          <a href="?agent=gemini"
+            className="group flex flex-col items-center gap-3 rounded-xl px-10 py-8 transition-all duration-200"
+            style={{
+              background: "#12111e",
+              border: "1px solid #4c3899",
+              boxShadow: "0 0 0 0 #a78bfa00",
+            }}
+            onMouseEnter={e => (e.currentTarget.style.boxShadow = "0 0 24px #a78bfa44")}
+            onMouseLeave={e => (e.currentTarget.style.boxShadow = "0 0 0 0 #a78bfa00")}
+          >
+            <span className="h-3 w-3 rounded-full"
+              style={{ background: "radial-gradient(circle at 35% 35%, #c4b5fd, #7c3aed)", boxShadow: "0 0 10px #7c3aed88" }} />
+            <span className="text-lg font-semibold" style={{ color: "#a78bfa" }}>eshwar</span>
+            <span className="text-xs" style={{ color: "#45475a" }}>Gemini 2.5 Flash</span>
+          </a>
+
+          {/* Judge view */}
+          <a href="?agent=both"
+            className="flex flex-col items-center gap-3 rounded-xl px-10 py-8 transition-all duration-200"
+            style={{
+              background: "#12111e",
+              border: "1px solid #6c63ff44",
+              boxShadow: "0 0 0 0 #6c63ff00",
+            }}
+            onMouseEnter={e => (e.currentTarget.style.boxShadow = "0 0 24px #6c63ff33")}
+            onMouseLeave={e => (e.currentTarget.style.boxShadow = "0 0 0 0 #6c63ff00")}
+          >
+            <span className="h-3 w-3 rounded-full"
+              style={{ background: "radial-gradient(circle at 35% 35%, #a78bfa, #6c63ff)", boxShadow: "0 0 10px #6c63ff88" }} />
+            <span className="text-lg font-semibold" style={{ color: "#a78bfa" }}>both</span>
+            <span className="text-xs" style={{ color: "#45475a" }}>judge view</span>
+          </a>
+        </div>
+      </div>
+    );
+  }
 
   // ── Single-agent view (one tab / one machine) ──
   if (agentParam === "openai" || agentParam === "gemini") {
@@ -113,7 +182,7 @@ function PageInner() {
     );
   }
 
-  // ── Side-by-side judge view (default) ──
+  // ── Side-by-side judge view ──
   return (
     <div className="flex h-screen flex-col overflow-hidden" style={{ background: "#13121f" }}>
       <header className="metal-bar flex items-center gap-4 px-5 py-3 shrink-0">
